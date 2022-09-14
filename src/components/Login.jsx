@@ -83,7 +83,7 @@ export default function Login() {
                         alt="quizline logo"
                         sx={{ width: 100, height: 100, mb: "1em" }}
                     />
-                    <Typography variant="h2" fontWeight="500">
+                    <Typography variant="h2" >
                         QuizLine
                     </Typography>
                     <form

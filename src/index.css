@@ -1,8 +1,30 @@
+@import url("https://fonts.googleapis.com/css2?family=Work+Sans:wght@200;300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Staatliches&display=swap");
+
 body {
-    background: linear-gradient(-45deg, #39F971, #00D896, #00B4A5, #008F9F);
+    background: linear-gradient(-45deg, #39f971, #00d896, #00b4a5, #008f9f);
     background-size: 400% 400%;
     animation: gradient 10s ease infinite;
     height: 100vh;
+}
+
+.delete-btn {
+    position: absolute;
+    top: 0.5em;
+    right: 0.5em;
+    height: 1.5em;
+    width: 1.5em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.delete-btn:hover {
+    background-color: red;
+    color: white;
 }
 
 @keyframes gradient {
