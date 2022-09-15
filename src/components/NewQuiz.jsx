@@ -22,14 +22,17 @@ import ListItemText from "@mui/material/ListItemText";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import IconButton from "@mui/material/IconButton";
+import Grid from "@mui/material/Grid";
 import { useNavigate } from "react-router-dom";
 import axiosClient from "../api-config";
 import ArrowCircleUpIcon from "@mui/icons-material/ArrowCircleUp";
 import ArrowCircleDownIcon from "@mui/icons-material/ArrowCircleDown";
+import DeleteIcon from "@mui/icons-material/Delete";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 
 export default function NewQuiz() {
     const [user, setUser] = useState(null);
-    const [quizType, setQuizType] = useState("Multiple Choice");
+    const [questionType, setQuestionType] = useState("Multiple Choices");
     const [correctAnswer, setCorrectAnswer] = useState(0);
     const [list, setList] = useState([
         "Choice 1",
@@ -43,6 +46,7 @@ export default function NewQuiz() {
     const navigate = useNavigate();
     const open = Boolean(anchorEl);
     const [cancelDialog, setCancelDialog] = useState(false);
+    const [selected, setSelected] = useState(null);
 
     const handleCancelOpen = () => {
         setCancelDialog(true);
@@ -78,6 +82,11 @@ export default function NewQuiz() {
         setAnchorEl(null);
     };
 
+    const handleSelectedClick = (index) => {
+        setSelected(index);
+        setCorrectAnswer(questions[index].correctAnswer);
+    };
+
     const swapQuizzes = (index, direction) => {
         const newQuestions = [...questions];
         [newQuestions[index], newQuestions[index + direction]] = [
@@ -88,8 +97,8 @@ export default function NewQuiz() {
     };
 
     const handleTypeChange = (ev) => {
-        setQuizType(ev.target.value);
-        if (ev.target.value === "Multiple Choice") {
+        setQuestionType(ev.target.value);
+        if (ev.target.value === "Multiple Choices") {
             setList(["Choice 1", "Choice 2", "Choice 3", "Choice 4"]);
         } else {
             setList(["True", "False"]);
@@ -112,9 +121,8 @@ export default function NewQuiz() {
     const handleQuestionSubmit = (event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
-        data.append("type", quizType);
         data.append("correctAnswer", correctAnswer);
-        if (quizType === "Multiple Choices") {
+        if (questionType === "Multiple Choices") {
             const choice1 = data.get("choice1");
             const choice2 = data.get("choice2");
             const choice3 = data.get("choice3");
@@ -126,7 +134,7 @@ export default function NewQuiz() {
                 choice4,
             ]);
             data.append("choices", choices);
-        } else if (quizType === "True or False") {
+        } else if (questionType === "True or False") {
             const choices = JSON.stringify(["True", "False"]);
             data.append("choices", choices);
         }
@@ -147,6 +155,43 @@ export default function NewQuiz() {
         }
     };
 
+    const submitEdit = async (input) => {
+        const id = questions[selected]._id;
+        const response = await axiosClient.post(`/question/${id}`, input);
+        if (response.status !== 200) {
+            alert(response.response.data.message);
+        } else {
+            const newQuestions = [...questions];
+            newQuestions.splice(selected, 1, response.data);
+            setQuestions(newQuestions);
+            alert("Question successfully edited!");
+        }
+    };
+
+    const handleSubmitEdit = (event) => {
+        event.preventDefault();
+        const data = new FormData(event.currentTarget);
+        data.append("correctAnswer", correctAnswer);
+        if (questionType === "Multiple Choices") {
+            const choice1 = data.get("choice1");
+            const choice2 = data.get("choice2");
+            const choice3 = data.get("choice3");
+            const choice4 = data.get("choice4");
+            const choices = JSON.stringify([
+                choice1,
+                choice2,
+                choice3,
+                choice4,
+            ]);
+            data.append("choices", choices);
+        } else if (questionType === "True or False") {
+            const choices = JSON.stringify(["True", "False"]);
+            data.append("choices", choices);
+        }
+
+        submitEdit(data);
+    };
+
     const submitQuiz = async (input) => {
         const response = await axiosClient.post("/quiz/new", input);
         if (response.status !== 201) {
@@ -156,7 +201,7 @@ export default function NewQuiz() {
             alert("Quiz successfully created!");
             navigate("/");
         }
-    }
+    };
 
     const handleSubmitQuiz = (event) => {
         event.preventDefault();
@@ -167,10 +212,9 @@ export default function NewQuiz() {
         const reqBody = {
             title,
             subject,
-            type: quizType,
             questions: list,
         };
-        console.log(reqBody);
+
         submitQuiz(reqBody);
     };
 
@@ -187,163 +231,566 @@ export default function NewQuiz() {
     return (
         <Container
             component="main"
-            maxWidth="sm"
+            maxWidth="lg"
             sx={{
                 minHeight: "100vh",
                 display: "flex",
                 alignItems: "center",
             }}
         >
-            {user && (
-                <Card
-                    sx={{
-                        width: "100%",
-                        background: "#ffffffb0",
-                        mt: "1em",
-                        mb: "1em",
-                    }}
-                >
-                    <CardContent
-                        sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            gap: "1em",
-                        }}
-                    >
-                        <Typography variant="h2">QuizLine</Typography>
-
-                        <Typography variant="h5" align="center">
-                            Create a new quiz
-                        </Typography>
-
-                        <form
-                            style={{
+            <Grid container spacing={1}>
+                <Grid item xs={12} md={6}>
+                    {user && (
+                        <Card
+                            sx={{
                                 width: "100%",
+                                background: "#ffffffb0",
+                                mt: "1em",
+                                mb: "1em",
+                                minHeight: "80vh",
                                 display: "flex",
-                                flexDirection: "column",
-                                gap: "0.5em",
+                                alignItems: "center",
                             }}
-                            onSubmit={handleSubmitQuiz}
                         >
-                            <TextField
-                                name="title"
-                                label="Title"
-                                variant="standard"
-                                required
-                                fullWidth
-                                autoFocus
-                            />
-                            <TextField
-                                name="subject"
-                                label="Subject"
-                                variant="standard"
-                                required
-                                fullWidth
-                            />
-                            <FormControl required sx={{ mb: "1em" }} disabled={questions.length > 0}>
-                                <FormLabel id="type" name="type">
-                                    Quiz Type
-                                </FormLabel>
-                                <RadioGroup
-                                    row
-                                    name="type"
-                                    onChange={handleTypeChange}
-                                    value={quizType}
-                                >
-                                    <FormControlLabel
-                                        value="Multiple Choice"
-                                        control={<Radio />}
-                                        label="Multiple Choice"
-                                    />
-                                    <FormControlLabel
-                                        value="True or False"
-                                        control={<Radio />}
-                                        label="True or False"
-                                    />
-                                </RadioGroup>
-                            </FormControl>
+                            <CardContent
+                                sx={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    gap: "1em",
+                                    width: "100%",
+                                }}
+                            >
+                                <Typography variant="h2">QuizLine</Typography>
 
-                            {questions.length > 0 &&
-                                questions.map((item, index) => (
-                                    <Card
+                                <Typography variant="h5" align="center">
+                                    Create a new quiz
+                                </Typography>
+
+                                <form
+                                    style={{
+                                        width: "100%",
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: "0.5em",
+                                    }}
+                                    onSubmit={handleSubmitQuiz}
+                                >
+                                    <TextField
+                                        name="title"
+                                        label="Title"
+                                        variant="standard"
+                                        required
+                                        fullWidth
+                                        autoFocus
+                                    />
+                                    <TextField
+                                        name="subject"
+                                        label="Subject"
+                                        variant="standard"
+                                        required
+                                        fullWidth
                                         sx={{
-                                            position: "relative",
-                                            width: "100%",
+                                            mb: "2em",
                                         }}
+                                    />
+
+                                    {questions.length > 0 &&
+                                        questions.map((item, index) => (
+                                            <Card
+                                                key={item._id}
+                                                sx={{
+                                                    position: "relative",
+                                                    width: "100%",
+                                                }}
+                                            >
+                                                <CardContent>
+                                                    <Typography
+                                                        variant="subtitle1"
+                                                        fontWeight="500"
+                                                        sx={{ mb: "0.5em" }}
+                                                    >
+                                                        Question:{" "}
+                                                        {item.question}
+                                                    </Typography>
+                                                    <Typography
+                                                        variant="subtitle2"
+                                                        sx={{ mb: "0.5em" }}
+                                                    >
+                                                        Answer:{" "}
+                                                        {
+                                                            item.choices[
+                                                                item
+                                                                    .correctAnswer
+                                                            ].text
+                                                        }
+                                                    </Typography>
+                                                </CardContent>
+                                                <ButtonGroup
+                                                    sx={{
+                                                        alignSelf: "flex-end",
+                                                        display: "flex",
+                                                        justifyContent:
+                                                            "space-between",
+                                                    }}
+                                                >
+                                                    <IconButton
+                                                        color="warning"
+                                                        disabled={index === 0}
+                                                        onClick={() => {
+                                                            swapQuizzes(
+                                                                index,
+                                                                -1
+                                                            );
+                                                        }}
+                                                    >
+                                                        <ArrowCircleUpIcon />
+                                                    </IconButton>
+                                                    <IconButton
+                                                        color="error"
+                                                        onClick={() =>
+                                                            deleteQuestion(
+                                                                item._id
+                                                            )
+                                                        }
+                                                    >
+                                                        <DeleteIcon />
+                                                    </IconButton>
+                                                    <IconButton
+                                                        color="success"
+                                                        onClick={() =>
+                                                            handleSelectedClick(
+                                                                index
+                                                            )
+                                                        }
+                                                    >
+                                                        <VisibilityIcon />
+                                                    </IconButton>
+                                                    <IconButton
+                                                        color="warning"
+                                                        disabled={
+                                                            index ===
+                                                            questions.length - 1
+                                                        }
+                                                        onClick={() => {
+                                                            swapQuizzes(
+                                                                index,
+                                                                1
+                                                            );
+                                                        }}
+                                                    >
+                                                        <ArrowCircleDownIcon />
+                                                    </IconButton>
+                                                </ButtonGroup>
+                                            </Card>
+                                        ))}
+                                    <Button
+                                        variant="contained"
+                                        color="warning"
+                                        onClick={handleNewQuestionOpen}
                                     >
-                                        <CardContent>
-                                            <Typography
-                                                variant="subtitle1"
-                                                fontWeight="500"
-                                                sx={{ mb: "0.5em" }}
-                                            >
-                                                Question: {item.question}
-                                            </Typography>
-                                            <Typography
-                                                variant="subtitle2"
-                                                sx={{ mb: "0.5em" }}
-                                            >
-                                                Answer:{" "}
-                                                {
-                                                    item.choices[
-                                                        item.correctAnswer
-                                                    ].text
-                                                }
-                                            </Typography>
-                                        </CardContent>
-                                        <button
-                                            className="delete-btn"
-                                            onClick={() =>
-                                                deleteQuestion(item._id)
+                                        Add Question to Quiz
+                                    </Button>
+                                    <ButtonGroup
+                                        variant="contained"
+                                        color="success"
+                                        sx={{ alignSelf: "center", mt: "1em" }}
+                                    >
+                                        <Button onClick={handleCancelOpen}>
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            disabled={questions.length === 0}
+                                            type="submit"
+                                        >
+                                            Save Quiz
+                                        </Button>
+                                    </ButtonGroup>
+                                </form>
+                            </CardContent>
+                        </Card>
+                    )}
+                </Grid>
+                <Grid item xs={12} md={6}>
+                    {selected === null && (
+                        <Card
+                            sx={{
+                                width: "100%",
+                                background: "#ffffffb0",
+                                mt: "1em",
+                                mb: "1em",
+                                minHeight: "80vh",
+                                display: "flex",
+                                alignItems: "center",
+                            }}
+                        >
+                            <CardContent
+                                sx={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    gap: "1em",
+                                    width: "100%",
+                                }}
+                            >
+                                <Typography variant="h5" align="center">
+                                    Questions can be edited as you please!
+                                </Typography>
+
+                                <Grid
+                                    container
+                                    spacing={2}
+                                    sx={{ width: "90%" }}
+                                >
+                                    <Grid item xs={1}>
+                                        <ArrowCircleUpIcon color="warning" />
+                                    </Grid>
+                                    <Grid item xs={11}>
+                                        <Typography variant="subtitle">
+                                            Move the question higher in the list
+                                        </Typography>
+                                    </Grid>
+                                    <Grid item xs={1}>
+                                        <DeleteIcon color="error" />
+                                    </Grid>
+                                    <Grid item xs={11}>
+                                        <Typography variant="subtitle">
+                                            Remove the question from the quiz
+                                        </Typography>
+                                    </Grid>
+                                    <Grid item xs={1}>
+                                        <VisibilityIcon color="success" />
+                                    </Grid>
+                                    <Grid item xs={11}>
+                                        <Typography variant="subtitle">
+                                            View and edit the details of the
+                                            question
+                                        </Typography>
+                                    </Grid>
+                                    <Grid item xs={1}>
+                                        <ArrowCircleDownIcon color="warning" />
+                                    </Grid>
+                                    <Grid item xs={11}>
+                                        <Typography variant="subtitle">
+                                            Move the question lower in the list
+                                        </Typography>
+                                    </Grid>
+                                </Grid>
+                            </CardContent>
+                        </Card>
+                    )}
+                    {selected !== null && (
+                        <Card
+                            sx={{
+                                width: "100%",
+                                background: "#ffffffb0",
+                                mt: "1em",
+                                mb: "1em",
+                                minHeight: "80vh",
+                                display: "flex",
+                                alignItems: "center",
+                            }}
+                        >
+                            <CardContent
+                                sx={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    gap: "1em",
+                                    width: "100%",
+                                }}
+                            >
+                                <form
+                                    onSubmit={handleSubmitEdit}
+                                    style={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: "1em",
+                                        width: "100%",
+                                    }}
+                                >
+                                    <TextField
+                                        type="text"
+                                        variant="standard"
+                                        name="question"
+                                        label="Question"
+                                        fullWidth
+                                        required
+                                        defaultValue={
+                                            questions[selected].question
+                                        }
+                                    />
+                                    <FormControl required sx={{ mb: "1em" }}>
+                                        <FormLabel id="type" name="type">
+                                            Quiz Type
+                                        </FormLabel>
+                                        <RadioGroup
+                                            row
+                                            name="type"
+                                            onChange={handleTypeChange}
+                                            value={questionType}
+                                            defaultValue={
+                                                questions[selected].type
                                             }
                                         >
-                                            ✕
-                                        </button>
-                                        <ButtonGroup
-                                            sx={{ alignSelf: "flex-end" }}
-                                        >
-                                            <IconButton
-                                                disabled={index === 0}
-                                                onClick={() => {
-                                                    swapQuizzes(index, -1);
+                                            <FormControlLabel
+                                                value="Multiple Choices"
+                                                control={<Radio />}
+                                                label="Multiple Choices"
+                                            />
+                                            <FormControlLabel
+                                                value="True or False"
+                                                control={<Radio />}
+                                                label="True or False"
+                                            />
+                                        </RadioGroup>
+                                    </FormControl>
+                                    {questionType === "Multiple Choices" && (
+                                        <>
+                                            <Typography
+                                                variant="body1"
+                                                fontWeight="500"
+                                                align="center"
+                                            >
+                                                Choices
+                                            </Typography>
+                                            <TextField
+                                                name="choice1"
+                                                label="Choice 1"
+                                                variant="outlined"
+                                                required
+                                                fullWidth
+                                                defaultValue={
+                                                    questions[selected]
+                                                        ?.choices[0].text
+                                                }
+                                            />
+                                            <TextField
+                                                name="choice2"
+                                                label="Choice 2"
+                                                variant="outlined"
+                                                required
+                                                fullWidth
+                                                defaultValue={
+                                                    questions[selected]
+                                                        ?.choices[1].text
+                                                }
+                                            />
+                                            <TextField
+                                                name="choice3"
+                                                label="Choice 3"
+                                                variant="outlined"
+                                                required
+                                                fullWidth
+                                                defaultValue={
+                                                    questions[selected]
+                                                        ?.choices[2].text
+                                                }
+                                            />
+                                            <TextField
+                                                name="choice4"
+                                                label="Choice 4"
+                                                variant="outlined"
+                                                required
+                                                fullWidth
+                                                defaultValue={
+                                                    questions[selected]
+                                                        ?.choices[3].text
+                                                }
+                                            />
+                                            <List component="nav">
+                                                <ListItem
+                                                    button
+                                                    id="lock-button"
+                                                    aria-haspopup="listbox"
+                                                    aria-expanded={open}
+                                                    onClick={handleMcListOpen}
+                                                >
+                                                    <ListItemText
+                                                        primary="Select the correct answer"
+                                                        secondary={
+                                                            list[correctAnswer]
+                                                        }
+                                                    />
+                                                </ListItem>
+                                            </List>
+                                            <Menu
+                                                id="lock-menu"
+                                                anchorEl={anchorEl}
+                                                open={open}
+                                                onClose={handleMcListClose}
+                                                MenuListProps={{
+                                                    "aria-labelledby":
+                                                        "lock-button",
+                                                    role: "listbox",
                                                 }}
                                             >
-                                                <ArrowCircleUpIcon />
-                                            </IconButton>
-                                            <IconButton
-                                                disabled={index === questions.length - 1}
-                                                onClick={() => {
-                                                    swapQuizzes(index, 1);
+                                                <MenuItem
+                                                    key="Choice 1"
+                                                    selected={
+                                                        list[correctAnswer] ===
+                                                        "Choice 1"
+                                                    }
+                                                    onClick={(event) =>
+                                                        handleMcListClick(
+                                                            event,
+                                                            0
+                                                        )
+                                                    }
+                                                >
+                                                    Choice 1
+                                                </MenuItem>
+                                                <MenuItem
+                                                    key="Choice 2"
+                                                    selected={
+                                                        list[correctAnswer] ===
+                                                        "Choice 2"
+                                                    }
+                                                    onClick={(event) =>
+                                                        handleMcListClick(
+                                                            event,
+                                                            1
+                                                        )
+                                                    }
+                                                >
+                                                    Choice 2
+                                                </MenuItem>
+                                                <MenuItem
+                                                    key="Choice 3"
+                                                    selected={
+                                                        list[correctAnswer] ===
+                                                        "Choice 3"
+                                                    }
+                                                    onClick={(event) =>
+                                                        handleMcListClick(
+                                                            event,
+                                                            2
+                                                        )
+                                                    }
+                                                >
+                                                    Choice 3
+                                                </MenuItem>
+                                                <MenuItem
+                                                    key="Choice 4"
+                                                    selected={
+                                                        list[correctAnswer] ===
+                                                        "Choice 4"
+                                                    }
+                                                    onClick={(event) =>
+                                                        handleMcListClick(
+                                                            event,
+                                                            3
+                                                        )
+                                                    }
+                                                >
+                                                    Choice 4
+                                                </MenuItem>
+                                            </Menu>
+                                            <Button
+                                                variant="contained"
+                                                color="warning"
+                                                component="label"
+                                                name="image"
+                                            >
+                                                Upload Image for Question
+                                                <input
+                                                    type="file"
+                                                    name="image"
+                                                    accept="image/*"
+                                                    hidden
+                                                />
+                                            </Button>
+                                        </>
+                                    )}
+                                    {questionType === "True or False" && (
+                                        <>
+                                            <List component="nav">
+                                                <ListItem
+                                                    button
+                                                    id="lock-button"
+                                                    aria-haspopup="listbox"
+                                                    aria-expanded={open}
+                                                    onClick={handleMcListOpen}
+                                                >
+                                                    <ListItemText
+                                                        primary="Select the correct answer"
+                                                        secondary={
+                                                            list[correctAnswer]
+                                                        }
+                                                    />
+                                                </ListItem>
+                                            </List>
+                                            <Menu
+                                                id="lock-menu"
+                                                anchorEl={anchorEl}
+                                                open={open}
+                                                onClose={handleMcListClose}
+                                                MenuListProps={{
+                                                    "aria-labelledby":
+                                                        "lock-button",
+                                                    role: "listbox",
                                                 }}
                                             >
-                                                <ArrowCircleDownIcon />
-                                            </IconButton>
-                                        </ButtonGroup>
-                                    </Card>
-                                ))}
-                            <Button
-                                variant="contained"
-                                color="warning"
-                                onClick={handleNewQuestionOpen}
-                            >
-                                Add Question to Quiz
-                            </Button>
-                            <ButtonGroup variant="contained" color="success" sx={{ alignSelf: "center", mt: "1em" }}>
-                                <Button onClick={handleCancelOpen}>
-                                    Cancel
-                                </Button>
-                                <Button
-                                    disabled={questions.length === 0}
-                                    type="submit"
-                                >
-                                    Save Quiz
-                                </Button>
-                            </ButtonGroup>
-                        </form>
-                    </CardContent>
-                </Card>
-            )}
+                                                <MenuItem
+                                                    key="True"
+                                                    selected={
+                                                        list[correctAnswer] ===
+                                                        "True"
+                                                    }
+                                                    onClick={(event) =>
+                                                        handleMcListClick(
+                                                            event,
+                                                            0
+                                                        )
+                                                    }
+                                                >
+                                                    True
+                                                </MenuItem>
+                                                <MenuItem
+                                                    key="False"
+                                                    selected={
+                                                        list[correctAnswer] ===
+                                                        "False"
+                                                    }
+                                                    onClick={(event) =>
+                                                        handleMcListClick(
+                                                            event,
+                                                            1
+                                                        )
+                                                    }
+                                                >
+                                                    False
+                                                </MenuItem>
+                                            </Menu>
+                                            <Button
+                                                variant="contained"
+                                                color="warning"
+                                                component="label"
+                                                name="image"
+                                            >
+                                                Upload Image for Question
+                                                <input
+                                                    type="file"
+                                                    name="image"
+                                                    accept="image/*"
+                                                    hidden
+                                                />
+                                            </Button>
+                                        </>
+                                    )}
+                                    <Button
+                                        color="success"
+                                        type="submit"
+                                        variant="contained"
+                                    >
+                                        Save
+                                    </Button>
+                                </form>
+                            </CardContent>
+                        </Card>
+                    )}
+                </Grid>
+            </Grid>
 
             <Dialog
                 open={newQuestionDialog}
@@ -368,7 +815,29 @@ export default function NewQuiz() {
                             fullWidth
                             required
                         />
-                        {quizType === "Multiple Choice" && (
+                        <FormControl required sx={{ mb: "1em" }}>
+                            <FormLabel id="type" name="type">
+                                Quiz Type
+                            </FormLabel>
+                            <RadioGroup
+                                row
+                                name="type"
+                                onChange={handleTypeChange}
+                                value={questionType}
+                            >
+                                <FormControlLabel
+                                    value="Multiple Choices"
+                                    control={<Radio />}
+                                    label="Multiple Choices"
+                                />
+                                <FormControlLabel
+                                    value="True or False"
+                                    control={<Radio />}
+                                    label="True or False"
+                                />
+                            </RadioGroup>
+                        </FormControl>
+                        {questionType === "Multiple Choices" && (
                             <>
                                 <Typography
                                     variant="body1"
@@ -490,7 +959,7 @@ export default function NewQuiz() {
                                 </Button>
                             </>
                         )}
-                        {quizType === "True or False" && (
+                        {questionType === "True or False" && (
                             <>
                                 <List component="nav">
                                     <ListItem

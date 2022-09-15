@@ -129,6 +129,7 @@ export default function Home() {
                                     >
                                         <Typography
                                             variant="h6"
+                                            align="center"
                                             sx={{ fontSize: "2em" }}
                                         >
                                             {quiz.title}
