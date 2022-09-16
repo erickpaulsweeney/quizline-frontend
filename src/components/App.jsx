@@ -18,8 +18,8 @@ export default function App() {
             <Route path="/quiz/new" element={<NewQuiz />} />
             <Route path="/quiz/edit" element={<EditQuiz />} />
             <Route path="/quiz/play/:id" element={<StartQuiz />} />
-            <Route path="/quiz/game/:id" element={<Game />} />
-            <Route path="/quiz/game/:id/player" element={<Player />} />
+            <Route path="/quiz/game/:id/:pin" element={<Game />} />
+            <Route path="/player" element={<Player />} />
         </Routes>
     );
 }
