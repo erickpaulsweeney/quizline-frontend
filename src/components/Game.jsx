@@ -67,6 +67,7 @@ export default function Game() {
             setTimeEnd(true);
             socket.emit("time-end", pin);
         }
+        // eslint-disable-next-line
     }, [timer]);
 
     useEffect(() => {

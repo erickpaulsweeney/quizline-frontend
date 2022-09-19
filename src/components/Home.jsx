@@ -9,20 +9,34 @@ import DialogTitle from "@mui/material/DialogTitle";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
 import ButtonGroup from "@mui/material/ButtonGroup";
+import Radio from "@mui/material/Radio";
+import RadioGroup from "@mui/material/RadioGroup";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import FormControl from "@mui/material/FormControl";
+import FormLabel from "@mui/material/FormLabel";
+import Accordion from "@mui/material/Accordion";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import AccordionDetails from "@mui/material/AccordionDetails";
 import { Link, useNavigate } from "react-router-dom";
 import axiosClient from "../api-config";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 export default function Home() {
     const [user, setUser] = useState(null);
     const [quizList, setQuizList] = useState([]);
+    const [resultList, setResultList] = useState([]);
+    const [category, setCategory] = useState("Quizzes");
     const [logoutDialog, setLogoutDialog] = useState(false);
+    const navigate = useNavigate();
+
+    const handleCategoryChange = (event) => {
+        setCategory(event.target.value);
+    };
 
     const handleEditClick = (id) => {
         localStorage.setItem("editQuiz", JSON.stringify(id));
         navigate("/quiz/edit");
-    }
-
-    const navigate = useNavigate();
+    };
 
     const handleLogoutOpen = () => {
         setLogoutDialog(true);
@@ -45,11 +59,21 @@ export default function Home() {
             alert(response.response.data.message);
             return;
         } else {
-            const newList = quizList.filter(el => el._id !== id);
+            const newList = quizList.filter((el) => el._id !== id);
             setQuizList(newList);
             alert("Quiz successfully deleted!");
         }
-    }
+    };
+
+    const fetchResults = async () => {
+        const response = await axiosClient.get("result");
+        if (response.status !== 200) {
+            alert(response.response.data.message);
+            return;
+        } else {
+            setResultList(response.data);
+        }
+    };
 
     const fetchQuizzes = async () => {
         const response = await axiosClient.get("quiz");
@@ -68,6 +92,7 @@ export default function Home() {
         } else {
             setUser(data);
             fetchQuizzes();
+            fetchResults();
         }
         // eslint-disable-next-line
     }, []);
@@ -106,14 +131,36 @@ export default function Home() {
                             <strong>{user.data.name}</strong>!
                         </Typography>
 
-                        {quizList.length === 0 && (
+                        <FormControl>
+                            <FormLabel>View:</FormLabel>
+                            <RadioGroup
+                                row
+                                name="category"
+                                value={category}
+                                onChange={handleCategoryChange}
+                            >
+                                <FormControlLabel
+                                    value="Quizzes"
+                                    control={<Radio />}
+                                    label="Quizzes"
+                                />
+                                <FormControlLabel
+                                    value="Results"
+                                    control={<Radio />}
+                                    label="Results"
+                                />
+                            </RadioGroup>
+                        </FormControl>
+
+                        {category === "Quizzes" && quizList.length === 0 && (
                             <Typography variant="button" align="center">
                                 You have no quiz list yet. <br /> Create one
                                 now!
                             </Typography>
                         )}
 
-                        {quizList.length > 0 &&
+                        {category === "Quizzes" &&
+                            quizList.length > 0 &&
                             quizList.map((quiz) => (
                                 <Card
                                     key={quiz._id}
@@ -149,12 +196,54 @@ export default function Home() {
                                             variant="contained"
                                             color="success"
                                         >
-                                            <Button onClick={() => handleEditClick(quiz._id)}>Edit</Button>
-                                            <Button><Link to={`quiz/play/${quiz._id}`} style={{ textDecoration: "none", color: "inherit" }}>Start</Link></Button>
-                                            <Button onClick={() => handleDelete(quiz._id)}>Delete</Button>
+                                            <Button
+                                                onClick={() =>
+                                                    handleEditClick(quiz._id)
+                                                }
+                                            >
+                                                Edit
+                                            </Button>
+                                            <Button>
+                                                <Link
+                                                    to={`quiz/play/${quiz._id}`}
+                                                    style={{
+                                                        textDecoration: "none",
+                                                        color: "inherit",
+                                                    }}
+                                                >
+                                                    Start
+                                                </Link>
+                                            </Button>
+                                            <Button
+                                                onClick={() =>
+                                                    handleDelete(quiz._id)
+                                                }
+                                            >
+                                                Delete
+                                            </Button>
                                         </ButtonGroup>
                                     </CardActions>
                                 </Card>
+                            ))}
+
+                        {category === "Results" &&
+                            resultList.map((result, index) => (
+                                <Accordion key={result._id} sx={{ width: "100%" }}>
+                                    <AccordionSummary
+                                        expandIcon={<ExpandMoreIcon />}
+                                        aria-controls={`panel${
+                                            index + 1
+                                        }a-content`}
+                                        id={`panel${index + 1}a-header`}
+                                    >
+                                        <Typography variant="h6">{result.quiz.title}</Typography>
+                                    </AccordionSummary>
+                                    <AccordionDetails>
+                                        {result.results.map((player) => (
+                                            <Typography>{player.name}: {player.score}/{result.quiz.questions.length}</Typography>
+                                        ))}
+                                    </AccordionDetails>
+                                </Accordion>
                             ))}
 
                         <Button

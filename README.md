@@ -1,70 +1,37 @@
-# Getting Started with Create React App
+# Quizline Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Teacher
 
-## Available Scripts
+![Sign Up](./public/images/Sign%20Up.png)
 
-In the project directory, you can run:
+![Log In](./public//images/Log%20In.png)
 
-### `npm start`
+![Home Page](./public/images/Home%20Page.png)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+![Edit Quiz](./public/images/Edit%20Quiz.png)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+![Start Quiz](./public/images/Waiting%20Room.png)
 
-### `npm test`
+![Start Quiz with Student](./public/images/Waiting%20Room%20with%20Student.png)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+![Game Proper (True or False)](./public/images/Game%20Proper%20(True%20or%20False).png)
 
-### `npm run build`
+![Game Proper (Multiple Choices)](./public/images/Game%20Proper%20(Multiple%20Choices).png)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+![Game Feedback](./public/images/Game%20Feedback.png)
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+![Game Result](./public/images/Game%20Result.png)
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Student
 
-### `npm run eject`
+![Room PIN](./public/images/Enter%20Room%20PIN%20-%20Student.png)
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+![Room Name](./public/images/Enter%20Name%20-%20Student.png)
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+![Waiting Room](./public/images/Waiting%20Room%20-%20Student.png)
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+![Game Proper (True or False)](./public/images/Game%20Proper%20(True%20or%20False)%20-%20Student.png)
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+![Game Proper (Multiple Choices)](./public/images/Game%20Proper%20(Multiple%20Choices)%20-%20Student.png)
 
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+![Game Feedback](./public/images/Game%20Feedback%20-%20Student.png)

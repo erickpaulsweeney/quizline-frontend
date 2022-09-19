@@ -32,6 +32,7 @@ export default function Player() {
     const [answered, setAnswered] = useState(false);
     const [timeEnd, setTimeEnd] = useState(false);
     const [gameEnd, setGameEnd] = useState(false);
+    // eslint-disable-next-line
     const [topThree, setTopThree] = useState(null);
     const [topPlayer, setTopPlayer] = useState(false);
     const [results, setResults] = useState(null);

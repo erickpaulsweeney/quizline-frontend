@@ -7,8 +7,6 @@ import Avatar from "@mui/material/Avatar";
 import CircularProgress from "@mui/material/CircularProgress";
 import Grid from "@mui/material/Grid";
 import Button from "@mui/material/Button";
-import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
 import { useParams, useNavigate } from "react-router-dom";
 import axiosClient from "../api-config";
 import { socket } from "./StartQuiz";
