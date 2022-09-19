@@ -11,12 +11,14 @@ import Grid from "@mui/material/Grid";
 // import { useNavigate, useParams } from "react-router-dom";
 // import axiosClient from "../api-config";
 import { socket } from "./StartQuiz";
+import Confetti from "react-dom-confetti";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import LooksOneIcon from "@mui/icons-material/LooksOne";
 import LooksTwoIcon from "@mui/icons-material/LooksTwo";
 import Looks3Icon from "@mui/icons-material/Looks3";
 import Looks4Icon from "@mui/icons-material/Looks4";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 
 export default function Player() {
     const [roomPin, setRoomPin] = useState(null);
@@ -30,7 +32,12 @@ export default function Player() {
     const [answered, setAnswered] = useState(false);
     const [timeEnd, setTimeEnd] = useState(false);
     const [gameEnd, setGameEnd] = useState(false);
-    console.log(curr, quiz);
+    const [topThree, setTopThree] = useState(null);
+    const [topPlayer, setTopPlayer] = useState(false);
+    const [results, setResults] = useState(null);
+    const [pass, setPass] = useState(false);
+    const [list, setList] = useState([]);
+    // console.log(results)
 
     const submitPin = () => {
         socket.emit("enter-pin", input);
@@ -42,8 +49,41 @@ export default function Player() {
 
     const submitAnswer = (answer) => {
         setAnswered(answer);
-        socket.emit("answer", { roomPin, input: { question: curr, answer: answer } });
+        const check = answer === quiz.questions[curr].correctAnswer;
+        socket.emit("answer", {
+            roomPin,
+            input: { question: curr, answer: answer, score: check },
+            check: check,
+        });
     };
+
+    const handleRefresh = () => {
+        window.location.reload();
+    };
+
+    useEffect(() => {
+        console.log(results)
+        if (results) {
+            setPass((results.score / curr + 1) * 100 >= 70);
+            let newList = [];
+            for (let i = 0; i <= curr; i++) {
+                let findAnswer = results.answers.find(
+                    (answer) => answer.question === i
+                );
+                if (!findAnswer) {
+                    newList.push({
+                        question: i,
+                        answer: false,
+                        score: false,
+                    });
+                } else {
+                    newList.push(findAnswer);
+                }
+            }
+            setList(newList);
+        }
+        // eslint-disable-next-line
+    }, [results]);
 
     useEffect(() => {
         socket.on("wrong-pin", () => {
@@ -55,7 +95,9 @@ export default function Player() {
         });
 
         socket.on("already-started", () => {
-            alert("Quiz game has already started! Please wait for the next match!");
+            alert(
+                "Quiz game has already started! Please wait for the next match!"
+            );
         });
 
         socket.on("ask-name", (pin) => {
@@ -63,8 +105,9 @@ export default function Player() {
             setRoomPin(pin);
         });
 
-        socket.on("entered", () => {
+        socket.on("entered", (id) => {
             setEntered(true);
+            setName(id);
         });
 
         socket.on("start-game", () => {
@@ -83,6 +126,19 @@ export default function Player() {
             setCurr(curr);
             setAnswered(false);
             setTimeEnd(false);
+        });
+
+        socket.on("game-done", (data) => {
+            setGameEnd(true);
+            const filter = data.users.find((user) => user.id === name);
+            setResults(filter);
+            console.log(data, filter);
+        });
+
+        socket.on("results", (chartData) => {
+            setTopThree(chartData);
+            const topPlayer = chartData.some((item) => item.id === name);
+            setTopPlayer(topPlayer);
         });
         // eslint-disable-next-line
     }, []);
@@ -202,7 +258,7 @@ export default function Player() {
                             sx={{ width: 100, height: 100, mb: "1em" }}
                         />
                         <Typography variant="h2">QuizLine</Typography>
-                        {quiz && (
+                        {quiz && !gameEnd && (
                             <Grid container spacing={1}>
                                 <Grid container spacing={1}>
                                     <Grid item xs={12}>
@@ -344,7 +400,9 @@ export default function Player() {
                                                     />
                                                 )}
                                                 {answered === false && (
-                                                    <Typography variant="h5">No answer</Typography>
+                                                    <Typography variant="h5">
+                                                        No answer
+                                                    </Typography>
                                                 )}
                                             </Grid>
                                         </>
@@ -382,15 +440,29 @@ export default function Player() {
                                                     />
                                                 )}
                                                 {answered === false && (
-                                                    <Typography variant="h5">No answer</Typography>
+                                                    <Typography variant="h5">
+                                                        No answer
+                                                    </Typography>
                                                 )}
                                             </Grid>
                                         </>
                                     )}
-                                <Grid item xs={12} align="center" sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                <Grid
+                                    item
+                                    xs={12}
+                                    align="center"
+                                    sx={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "center",
+                                    }}
+                                >
                                     {!timeEnd && answered !== false && (
                                         <>
-                                            <Typography variant="subtitle" align="center">
+                                            <Typography
+                                                variant="subtitle"
+                                                align="center"
+                                            >
                                                 Waiting for others...
                                             </Typography>
                                             <CircularProgress color="warning" />
@@ -398,14 +470,139 @@ export default function Player() {
                                     )}
                                     {timeEnd && (
                                         <>
-                                            {quiz.questions[curr].correctAnswer === answered && (
-                                                <Typography variant="h4" align="center" fontWeight="500">Correct!</Typography>
+                                            {quiz.questions[curr]
+                                                .correctAnswer === answered && (
+                                                <Typography
+                                                    variant="h4"
+                                                    align="center"
+                                                    fontWeight="500"
+                                                >
+                                                    Correct!
+                                                </Typography>
                                             )}
-                                            {quiz.questions[curr].correctAnswer !== answered && (
-                                                <Typography variant="h4" align="center" fontWeight="500">Incorrect!</Typography>
+                                            {quiz.questions[curr]
+                                                .correctAnswer !== answered && (
+                                                <Typography
+                                                    variant="h4"
+                                                    align="center"
+                                                    fontWeight="500"
+                                                >
+                                                    Incorrect!
+                                                </Typography>
                                             )}
                                         </>
                                     )}
+                                </Grid>
+                            </Grid>
+                        )}
+                        {quiz && gameEnd && results && (
+                            <Grid container spacing={1}>
+                                <Grid item xs={12}>
+                                    <Typography
+                                        variant="h4"
+                                        align="center"
+                                        fontWeight="600"
+                                    >
+                                        Game over!
+                                    </Typography>
+                                    {topPlayer && pass && (
+                                        <>
+                                            <Grid item xs={12}>
+                                                <EmojiEventsIcon
+                                                    color="success"
+                                                    sx={{ fontSize: "5em" }}
+                                                />
+                                            </Grid>
+                                            <Grid item xs={12}>
+                                                <Typography
+                                                    variant="h5"
+                                                    align="center"
+                                                >
+                                                    You are in the top 3!
+                                                </Typography>
+                                            </Grid>
+                                            <Confetti
+                                                active={true}
+                                                config={{
+                                                    elementCount: 200,
+                                                    spread: 90,
+                                                }}
+                                            />
+                                        </>
+                                    )}
+                                    {!topPlayer && pass && (
+                                        <>
+                                            <Grid item xs={12}>
+                                                <Typography
+                                                    variant="h5"
+                                                    align="center"
+                                                >
+                                                    You passed the game!
+                                                    Congratulations!
+                                                </Typography>
+                                            </Grid>
+                                            <Confetti active={true} />
+                                        </>
+                                    )}
+                                    {!topPlayer && !pass && (
+                                        <>
+                                            <Grid item xs={12}>
+                                                <Typography
+                                                    variant="h5"
+                                                    align="center"
+                                                >
+                                                    Better luck next time! Train
+                                                    harder!
+                                                </Typography>
+                                            </Grid>
+                                        </>
+                                    )}
+                                </Grid>
+                                {list.length > 0 &&
+                                    list.map((item) => (
+                                        <Grid
+                                            item
+                                            key={item.question}
+                                            xs={12}
+                                            sx={{
+                                                display: "flex",
+                                                justifyContent: "center",
+                                                gap: "1em",
+                                            }}
+                                        >
+                                            <Typography>
+                                                Question {item.question + 1}:
+                                            </Typography>
+                                            {item.score && (
+                                                <CheckCircleIcon
+                                                    color="success"
+                                                    sx={{ fontSize: "2em" }}
+                                                />
+                                            )}
+                                            {!item.score && (
+                                                <CancelIcon
+                                                    color="warning"
+                                                    sx={{ fontSize: "2em" }}
+                                                />
+                                            )}
+                                        </Grid>
+                                    ))}
+                                <Grid
+                                    item
+                                    xs={12}
+                                    sx={{
+                                        display: "flex",
+                                        justifyContent: "center",
+                                        mt: "2em",
+                                    }}
+                                >
+                                    <Button
+                                        variant="contained"
+                                        color="warning"
+                                        onClick={handleRefresh}
+                                    >
+                                        Play another game
+                                    </Button>
                                 </Grid>
                             </Grid>
                         )}

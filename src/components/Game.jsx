@@ -12,7 +12,6 @@ import Chip from "@mui/material/Chip";
 import { useParams, useNavigate } from "react-router-dom";
 import axiosClient from "../api-config";
 import { socket } from "./StartQuiz";
-import Chart from "./Chart";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import LooksOneIcon from "@mui/icons-material/LooksOne";
@@ -21,6 +20,7 @@ import Looks3Icon from "@mui/icons-material/Looks3";
 import Looks4Icon from "@mui/icons-material/Looks4";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
+import FaceIcon from "@mui/icons-material/Face";
 
 export default function Game() {
     const { id, pin } = useParams();
@@ -30,7 +30,6 @@ export default function Game() {
     const [timer, setTimer] = useState(0);
     const [timeEnd, setTimeEnd] = useState(false);
     const [roomData, setRoomData] = useState(null);
-    const [chartData, setChartData] = useState(null);
     const [gameEnd, setGameEnd] = useState(false);
     const navigate = useNavigate();
 
@@ -53,6 +52,7 @@ export default function Game() {
             setTimeEnd(false);
             socket.emit("next-question", { pin, curr: currNumber + 1 });
         } else {
+            setGameEnd(true);
             socket.emit("game-done", pin);
         }
     };
@@ -71,25 +71,14 @@ export default function Game() {
 
     useEffect(() => {
         if (gameEnd) {
-            const newData = {
-                labels:
-                    quiz.questions[currNumber].type === "True or False"
-                        ? ["True", "False"]
-                        : ["Choice 1", "Choice 2", "Choice 3", "Choice 4"],
-                datasets: [
-                    {
-                        label: "Choices",
-                        data: roomData.users.map(
-                            (user) => user.answers[currNumber]
-                        ),
-                    },
-                ],
-            };
-            console.log(newData);
-            setChartData(newData);
+            const filtered = roomData.users.sort((a, b) => b.score - a.score);
+            const top3 = filtered.slice(0, 3);
+            console.log(top3);
+            socket.emit("results", { pin, chartData: top3 });
+            navigate(`/quiz/result/${id}/${pin}`);
         }
         // eslint-disable-next-line
-    }, [roomData]);
+    }, [roomData, gameEnd]);
 
     useEffect(() => {
         const data = JSON.parse(localStorage.getItem("quizUser"));
@@ -201,13 +190,6 @@ export default function Game() {
                             <Grid
                                 container
                                 xs={12}
-                                // sx={{
-                                //     display: "flex",
-                                //     flexDirection: "column",
-                                //     alignItems: "center",
-                                //     gap: "1em",
-                                //     mb: "3em",
-                                // }}
                             >
                                 <Grid
                                     item
@@ -624,15 +606,20 @@ export default function Game() {
                                         mt: "2em",
                                     }}
                                 >
-                                    {roomData.users.map((user) => (
+                                    {roomData.users.map((user, index) => (
                                         <Chip
+                                            icon={<FaceIcon />}
                                             label={user.name}
-                                            color="success"
                                             variant={
                                                 user.answers[currNumber] !==
                                                 undefined
                                                     ? "contained"
                                                     : "outlined"
+                                            }
+                                            color={
+                                                index % 2 === 0
+                                                    ? "success"
+                                                    : "warning"
                                             }
                                         />
                                     ))}

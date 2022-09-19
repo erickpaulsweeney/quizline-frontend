@@ -6,6 +6,7 @@ import Home from "./Home";
 import Login from "./Login";
 import NewQuiz from "./NewQuiz";
 import Player from "./Player";
+import Results from "./Results";
 import Signup from "./SignUp";
 import StartQuiz from "./StartQuiz";
 
@@ -20,6 +21,7 @@ export default function App() {
             <Route path="/quiz/play/:id" element={<StartQuiz />} />
             <Route path="/quiz/game/:id/:pin" element={<Game />} />
             <Route path="/player" element={<Player />} />
+            <Route path="/quiz/result/:id/:pin" element={<Results />} />
         </Routes>
     );
 }
